@@ -1,4 +1,87 @@
-// Configuración del perfil
+// ============================================
+// UTILIDADES DE SEGURIDAD
+// ============================================
+
+/**
+ * Sanitiza texto para prevenir XSS
+ * @param {string} text - Texto a sanitizar
+ * @returns {string} - Texto sanitizado
+ */
+function sanitizeText(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Valida si una URL es segura
+ * @param {string} url - URL a validar
+ * @returns {boolean} - true si la URL es válida
+ */
+function isValidURL(url) {
+    try {
+        const urlObj = new URL(url);
+        // Solo permitir protocolos seguros
+        const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
+        if (!allowedProtocols.includes(urlObj.protocol)) {
+            return false;
+        }
+        // Prevenir javascript: y data: URLs maliciosas
+        if (urlObj.protocol === 'javascript:' || urlObj.protocol === 'data:') {
+            return false;
+        }
+        return true;
+    } catch (e) {
+        // Si no es una URL absoluta, verificar si es un hash válido
+        return url.startsWith('#') || url.startsWith('/');
+    }
+}
+
+/**
+ * Sanitiza clases CSS para prevenir inyección
+ * @param {string} className - Nombre de clase a sanitizar
+ * @returns {string} - Clase sanitizada
+ */
+function sanitizeClassName(className) {
+    // Solo permitir caracteres alfanuméricos, guiones y guiones bajos
+    return className.replace(/[^a-zA-Z0-9\-_ ]/g, '');
+}
+
+/**
+ * Valida y sanitiza configuración de usuario
+ * @param {Object} config - Configuración a validar
+ * @returns {Object} - Configuración sanitizada
+ */
+function validateConfig(config) {
+    return {
+        name: sanitizeText(config.name || ''),
+        bio: sanitizeText(config.bio || ''),
+        image: isValidURL(config.image) ? config.image : 'https://via.placeholder.com/150'
+    };
+}
+
+/**
+ * Valida y sanitiza un enlace
+ * @param {Object} link - Enlace a validar
+ * @returns {Object|null} - Enlace sanitizado o null si es inválido
+ */
+function validateLink(link) {
+    if (!link || typeof link !== 'object') return null;
+    if (!link.url || !isValidURL(link.url)) return null;
+
+    return {
+        name: sanitizeText(link.name || ''),
+        title: sanitizeText(link.title || ''),
+        url: link.url, // Ya validada
+        icon: sanitizeClassName(link.icon || ''),
+        featured: Boolean(link.featured)
+    };
+}
+
+// ============================================
+// CONFIGURACIÓN DEL PERFIL
+// ============================================
+
 const profileConfig = {
     name: "Tu Nombre Aquí",
     bio: "Desarrollador | Creador de contenido | Entusiasta de la tecnología",
@@ -81,10 +164,19 @@ const customLinks = [
 
 // Función para inicializar el perfil
 function initializeProfile() {
-    document.getElementById('profileName').textContent = profileConfig.name;
-    document.getElementById('profileBio').textContent = profileConfig.bio;
-    document.getElementById('profileImg').src = profileConfig.image;
-    document.getElementById('profileImg').alt = profileConfig.name;
+    const validatedConfig = validateConfig(profileConfig);
+    document.getElementById('profileName').textContent = validatedConfig.name;
+    document.getElementById('profileBio').textContent = validatedConfig.bio;
+
+    const profileImg = document.getElementById('profileImg');
+    profileImg.src = validatedConfig.image;
+    profileImg.alt = validatedConfig.name;
+
+    // Prevenir errores si la imagen no carga
+    profileImg.onerror = function() {
+        this.src = 'https://via.placeholder.com/150';
+        this.alt = 'Imagen de perfil no disponible';
+    };
 }
 
 // Función para renderizar links de redes sociales
@@ -93,17 +185,27 @@ function renderSocialLinks() {
     socialLinksContainer.innerHTML = '';
 
     socialLinks.forEach(link => {
+        const validatedLink = validateLink(link);
+        if (!validatedLink) {
+            console.warn('Link inválido detectado y omitido:', link);
+            return;
+        }
+
         const linkElement = document.createElement('a');
-        linkElement.href = link.url;
+        linkElement.href = validatedLink.url;
         linkElement.className = 'social-link';
         linkElement.target = '_blank';
-        linkElement.rel = 'noopener noreferrer';
-        linkElement.setAttribute('aria-label', link.name);
-        linkElement.innerHTML = `<i class="${link.icon}"></i>`;
+        linkElement.rel = 'noopener noreferrer nofollow';
+        linkElement.setAttribute('aria-label', validatedLink.name);
+
+        // Crear icono de forma segura (sin innerHTML)
+        const icon = document.createElement('i');
+        icon.className = validatedLink.icon;
+        linkElement.appendChild(icon);
 
         // Event listener para tracking (opcional)
         linkElement.addEventListener('click', () => {
-            trackLinkClick('social', link.name);
+            trackLinkClick('social', validatedLink.name);
         });
 
         socialLinksContainer.appendChild(linkElement);
@@ -116,21 +218,31 @@ function renderCustomLinks() {
     customLinksContainer.innerHTML = '';
 
     customLinks.forEach(link => {
-        const linkElement = document.createElement('a');
-        linkElement.href = link.url;
-        linkElement.className = link.featured ? 'link-button featured' : 'link-button';
-        linkElement.target = '_blank';
-        linkElement.rel = 'noopener noreferrer';
+        const validatedLink = validateLink(link);
+        if (!validatedLink) {
+            console.warn('Link inválido detectado y omitido:', link);
+            return;
+        }
 
-        // Añadir icono y título
-        linkElement.innerHTML = `
-            <i class="${link.icon}"></i>
-            <span>${link.title}</span>
-        `;
+        const linkElement = document.createElement('a');
+        linkElement.href = validatedLink.url;
+        linkElement.className = validatedLink.featured ? 'link-button featured' : 'link-button';
+        linkElement.target = '_blank';
+        linkElement.rel = 'noopener noreferrer nofollow';
+
+        // Crear icono y título de forma segura (sin innerHTML)
+        const icon = document.createElement('i');
+        icon.className = validatedLink.icon;
+
+        const span = document.createElement('span');
+        span.textContent = validatedLink.title;
+
+        linkElement.appendChild(icon);
+        linkElement.appendChild(span);
 
         // Event listener para tracking (opcional)
         linkElement.addEventListener('click', () => {
-            trackLinkClick('custom', link.title);
+            trackLinkClick('custom', validatedLink.title);
         });
 
         customLinksContainer.appendChild(linkElement);
@@ -149,8 +261,18 @@ function initializeThemeToggle() {
     const themeToggle = document.getElementById('themeToggle');
     const htmlElement = document.documentElement;
 
-    // Cargar tema guardado
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    // Cargar tema guardado con validación
+    let savedTheme = 'dark';
+    try {
+        const storedTheme = localStorage.getItem('theme');
+        // Validar que el tema sea uno de los permitidos
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+            savedTheme = storedTheme;
+        }
+    } catch (e) {
+        console.warn('Error al acceder a localStorage:', e);
+    }
+
     htmlElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 
@@ -160,7 +282,13 @@ function initializeThemeToggle() {
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
         htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+
+        try {
+            localStorage.setItem('theme', newTheme);
+        } catch (e) {
+            console.warn('No se pudo guardar el tema en localStorage:', e);
+        }
+
         updateThemeIcon(newTheme);
 
         // Añadir animación al botón
@@ -269,8 +397,14 @@ function copyToClipboard(text) {
 
 // Función para mostrar notificaciones
 function showNotification(message) {
+    // Sanitizar el mensaje
+    const sanitizedMessage = sanitizeText(message);
+
     const notification = document.createElement('div');
-    notification.textContent = message;
+    notification.textContent = sanitizedMessage;
+    notification.className = 'notification';
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'polite');
     notification.style.cssText = `
         position: fixed;
         bottom: 80px;
