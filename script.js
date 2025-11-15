@@ -324,21 +324,30 @@ function initializeParallax() {
 
 // Función para añadir animación de carga
 function addLoadingAnimation() {
+    // Añadir clase para animación de fade-in inicial
     document.body.style.opacity = '0';
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.body.style.transition = 'opacity 0.5s ease-in';
+    document.body.style.transition = 'opacity 0.5s ease-in';
+
+    // Usar requestAnimationFrame para asegurar que la transición se aplique
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
             document.body.style.opacity = '1';
-        }, 100);
+        });
     });
 }
 
 // Función para copiar enlace de la página
 function addShareFunctionality() {
-    // Puedes añadir un botón de compartir si lo deseas
+    // Crear botón de compartir de forma segura
     const shareButton = document.createElement('button');
     shareButton.className = 'share-button';
-    shareButton.innerHTML = '<i class="fas fa-share-alt"></i>';
+    shareButton.setAttribute('aria-label', 'Compartir página');
+
+    // Crear icono de forma segura (sin innerHTML)
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-share-alt';
+    shareButton.appendChild(icon);
+
     shareButton.style.cssText = `
         position: fixed;
         bottom: 20px;
@@ -462,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCustomLinks();
     initializeThemeToggle();
     initializeParallax();
-    addLoadingAnimation();
+    // addLoadingAnimation(); // Deshabilitado temporalmente para evitar pantalla negra
     addShareFunctionality();
 });
 
