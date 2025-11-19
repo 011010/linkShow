@@ -46,7 +46,17 @@ cd linkShow
 
 ### 2. Personaliza tu Información
 
-Abre `script.js` y edita la configuración:
+**IMPORTANTE**: Ahora la configuración está separada del código.
+
+```bash
+# Copia el archivo de ejemplo
+cp config.example.js config.js
+
+# Edita config.js con tu información
+# (No edites script.js - solo contiene lógica)
+```
+
+Abre `config.js` y personaliza:
 
 #### Configuración del Perfil
 
@@ -175,15 +185,25 @@ LinkShow incluye configuración optimizada para múltiples plataformas. **Ver [D
 
 ## 🔧 Características Técnicas
 
-### Estructura de Archivos
+### Estructura de Archivos (v2.0 - Nueva Arquitectura)
 
 ```
 linkShow/
-├── index.html      # Estructura HTML
-├── styles.css      # Estilos y animaciones
-├── script.js       # Lógica y configuración
-└── README.md       # Documentación
+├── index.html          # Estructura HTML
+├── styles.css          # Estilos y animaciones
+├── constants.js        # 🆕 Constantes globales (200+)
+├── config.js           # 🆕 Tu configuración personal (gitignored)
+├── config.example.js   # 🆕 Plantilla de configuración
+├── script.js           # 🔄 Solo lógica (refactorizado)
+├── CHANGELOG.md        # 🆕 Historial de cambios
+├── REFACTORING.md      # 🆕 Guía de refactorización
+└── README.md           # Documentación
 ```
+
+**Mejora clave v2.0**: Separación completa entre configuración y lógica.
+- ✅ **config.js**: Tu información personal (no se sube a Git)
+- ✅ **constants.js**: Constantes reutilizables
+- ✅ **script.js**: Solo lógica de la aplicación
 
 ### Tecnologías Utilizadas
 
@@ -289,6 +309,8 @@ Las contribuciones son bienvenidas. Por favor:
 ## 📚 Documentación
 
 - **[README.md](README.md)** - Este archivo (introducción y inicio rápido)
+- **[CHANGELOG.md](CHANGELOG.md)** - 🆕 Historial de cambios y versiones
+- **[REFACTORING.md](REFACTORING.md)** - 🆕 Guía de refactorización v2.0
 - **[SECURITY.md](SECURITY.md)** - Guía completa de seguridad y mejores prácticas
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guía de despliegue para todas las plataformas
 - **[CUSTOMIZATION.md](CUSTOMIZATION.md)** - Guía de personalización avanzada

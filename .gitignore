@@ -38,3 +38,8 @@ yarn-error.log*
 # Backups
 *.backup
 *.bak
+
+# LinkShow - Configuración personalizada
+# El archivo config.js contiene tu información personal
+# Usa config.example.js como plantilla
+config.js
